@@ -1,0 +1,575 @@
+<section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+  <form [formGroup]="form">
+    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div class="space-y-6">
+
+        <!-- Page header -->
+        <div class="space-y-2">
+          <span zBadge variant="outline">Calculadora principal</span>
+          <div class="space-y-1.5">
+            <h1 class="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Super Cashback
+            </h1>
+            <p class="max-w-2xl text-base leading-7 text-muted-foreground">
+              Simule o valor efetivo pago em um produto combinando pontos do parceiro, pontos do
+              cartão, milhas e revenda.
+            </p>
+          </div>
+        </div>
+
+        <!-- Calculator card -->
+        <div zCard>
+
+          <!-- Horizontal stepper -->
+          <div zCardHeader class="pb-5">
+            <div class="flex items-start">
+              @for (step of steps; track step.index) {
+                <button
+                  type="button"
+                  class="group flex shrink-0 flex-col items-center gap-2 focus-visible:outline-none"
+                  (click)="selectStep(step.index)"
+                >
+                  <div
+                    class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all duration-200 sm:h-9 sm:w-9"
+                    [class]="stepCircleClass(step.index)"
+                  >
+                    @if (stepCompletion()[step.index]) {
+                      <ng-icon name="lucideCheck" size="14" />
+                    } @else {
+                      {{ step.index + 1 }}
+                    }
+                  </div>
+                  <span
+                    class="hidden max-w-[4.5rem] text-center text-[11px] font-medium leading-tight sm:block"
+                    [class]="activeStep() === step.index ? 'text-foreground' : 'text-muted-foreground'"
+                  >
+                    {{ step.title }}
+                  </span>
+                </button>
+
+                @if (!$last) {
+                  <div class="relative mx-2 mt-[15px] h-px flex-1 overflow-hidden bg-border sm:mt-[17px]">
+                    <div
+                      class="absolute inset-y-0 left-0 h-full bg-primary transition-[width] duration-300"
+                      [style.width]="activeStep() > step.index || stepCompletion()[step.index] ? '100%' : '0%'"
+                    ></div>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+
+          <div zSeparator></div>
+
+          <!-- Step content -->
+          <div zCardContent class="space-y-6 pt-6">
+            @switch (activeStep()) {
+
+              @case (0) {
+                <section class="space-y-5">
+                  <p class="text-sm leading-6 text-muted-foreground">
+                    A cotação é buscada automaticamente via AwesomeAPI. Você pode editar
+                    manualmente para simular outro cenário.
+                  </p>
+
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <label class="flex-1 space-y-1.5">
+                      <span class="text-sm font-medium text-foreground">Cotação do dólar</span>
+                      <input
+                        zInput
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="5,67"
+                        formControlName="cotacaoDolar"
+                        [currencyMask]="ngxCurrencyUsdQuote"
+                        [invalid]="isInvalidCurrencyPositive(formValue().cotacaoDolar)"
+                        (input)="markQuoteAsManual()"
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      zButton
+                      variant="outline"
+                      class="shrink-0 gap-2 rounded-xl sm:self-end"
+                      (click)="refreshQuote()"
+                    >
+                      <ng-icon
+                        name="lucideRefreshCw"
+                        size="14"
+                        [class.animate-spin]="quoteLoading()"
+                      />
+                      {{ quoteLoading() ? 'Atualizando...' : 'Atualizar' }}
+                    </button>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl bg-muted/40 px-4 py-3 text-sm">
+                    <span class="text-muted-foreground">
+                      Atualizado em
+                      <span class="font-medium text-foreground">{{ formatDate(quoteUpdatedAt()) }}</span>
+                    </span>
+
+                    <span class="flex items-center gap-1.5 text-muted-foreground">
+                      Origem:
+                      @if (quoteSource() === 'api') {
+                        <span class="flex items-center gap-1.5 font-medium text-foreground">
+                          <span class="relative flex h-2 w-2 shrink-0">
+                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                          </span>
+                          AwesomeAPI
+                        </span>
+                      } @else {
+                        <span class="font-medium text-foreground">Manual</span>
+                      }
+                    </span>
+
+                    @if (quoteError()) {
+                      <span class="text-destructive">{{ quoteError() }}</span>
+                    }
+                  </div>
+                </section>
+              }
+
+              @case (1) {
+                <section class="space-y-5">
+                  <p class="text-sm leading-6 text-muted-foreground">
+                    Informe o valor da compra e a pontuação do parceiro por real gasto.
+                  </p>
+
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <label class="space-y-1.5">
+                      <span class="text-sm font-medium text-foreground">Valor da compra (R$)</span>
+                      <input
+                        zInput
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="2.499,90"
+                        formControlName="valorCompra"
+                        currencyMask
+                        [invalid]="isInvalidCurrencyPositive(formValue().valorCompra)"
+                      />
+                    </label>
+
+                    <label class="space-y-1.5">
+                      <span class="text-sm font-medium text-foreground">Pontos por real no parceiro</span>
+                      <input
+                        zInput
+                        inputmode="decimal"
+                        placeholder="10"
+                        formControlName="pontosPorRealParceiro"
+                        [invalid]="isInvalidNonNegative(formValue().pontosPorRealParceiro, parsedInput().pontosPorRealParceiro)"
+                      />
+                    </label>
+                  </div>
+
+                  <div class="metric-card">
+                    <p class="metric-label">Pontos acumulados no parceiro</p>
+                    <p class="metric-value">{{ formatPoints(output().pontosAcumuladosParceiro) }}</p>
+                  </div>
+                </section>
+              }
+
+              @case (2) {
+                <section class="space-y-5">
+                  <p class="text-sm leading-6 text-muted-foreground">
+                    O valor da compra e a cotação do dólar são reaproveitados automaticamente.
+                  </p>
+
+                  <label class="space-y-1.5">
+                    <span class="text-sm font-medium text-foreground">Pontos por dólar no cartão</span>
+                    <input
+                      zInput
+                      inputmode="decimal"
+                      placeholder="2,2"
+                      formControlName="pontosPorDolarCartao"
+                      [invalid]="isInvalidNonNegative(formValue().pontosPorDolarCartao, parsedInput().pontosPorDolarCartao)"
+                    />
+                  </label>
+
+                  <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="metric-card">
+                      <p class="metric-label">Base em dólar</p>
+                      <p class="metric-value">{{ formatPoints(baseInDollar()) }}</p>
+                    </div>
+                    <div class="metric-card">
+                      <p class="metric-label">Pontos acumulados no cartão</p>
+                      <p class="metric-value">{{ formatPoints(output().pontosAcumuladosCartao) }}</p>
+                    </div>
+                  </div>
+                </section>
+              }
+
+              @case (3) {
+                <section class="space-y-5">
+                  <p class="text-sm leading-6 text-muted-foreground">
+                    Defina o bônus da transferência e o valor de venda por milheiro vindo do parceiro.
+                  </p>
+
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <label class="space-y-1.5">
+                      <span class="text-sm font-medium text-foreground">Bônus de transferência (%)</span>
+                      <input
+                        zInput
+                        inputmode="decimal"
+                        placeholder="80"
+                        formControlName="bonusTransferenciaParceiro"
+                        [invalid]="isInvalidNonNegative(formValue().bonusTransferenciaParceiro, parsedInput().bonusTransferenciaParceiro)"
+                      />
+                    </label>
+
+                    <label class="space-y-1.5">
+                      <span class="text-sm font-medium text-foreground">Custo do milheiro (R$)</span>
+                      <input
+                        zInput
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="15"
+                        formControlName="custoMilheiroParceiro"
+                        currencyMask
+                        [invalid]="isInvalidCurrencyNonNegative(formValue().custoMilheiroParceiro)"
+                      />
+                    </label>
+                  </div>
+
+                  <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="metric-card">
+                      <p class="metric-label">Milhas geradas no parceiro</p>
+                      <p class="metric-value">{{ formatPoints(output().milhasParceiro) }}</p>
+                    </div>
+                    <div class="metric-card">
+                      <p class="metric-label">Valor das milhas do parceiro</p>
+                      <p class="metric-value">{{ formatCurrency(output().valorMilhasParceiro) }}</p>
+                    </div>
+                  </div>
+                </section>
+              }
+
+              @case (4) {
+                <section class="space-y-5">
+                  <p class="text-sm leading-6 text-muted-foreground">
+                    Ajuste o bônus e o milheiro do cartão e escolha se eles entram no consolidado final.
+                  </p>
+
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <label class="space-y-1.5">
+                      <span class="text-sm font-medium text-foreground">Bônus de transferência (%)</span>
+                      <input
+                        zInput
+                        inputmode="decimal"
+                        placeholder="100"
+                        formControlName="bonusTransferenciaCartao"
+                        [invalid]="isInvalidNonNegative(formValue().bonusTransferenciaCartao, parsedInput().bonusTransferenciaCartao)"
+                      />
+                    </label>
+
+                    <label class="space-y-1.5">
+                      <span class="text-sm font-medium text-foreground">Custo do milheiro (R$)</span>
+                      <input
+                        zInput
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="14,5"
+                        formControlName="custoMilheiroCartao"
+                        currencyMask
+                        [invalid]="isInvalidCurrencyNonNegative(formValue().custoMilheiroCartao)"
+                      />
+                    </label>
+                  </div>
+
+                  <div class="flex items-center justify-between rounded-xl border border-border bg-muted/25 p-4">
+                    <div>
+                      <p class="text-sm font-medium text-foreground">Incluir pontos do cartão no resultado</p>
+                      <p class="mt-0.5 text-xs text-muted-foreground">
+                        Quando desligado, consolida apenas as milhas do parceiro.
+                      </p>
+                    </div>
+                    <z-switch
+                      [checked]="formValue().somarPontosCartaoNaAnaliseFinal"
+                      (checkedChange)="updateIncludeCardPoints($event)"
+                    />
+                  </div>
+
+                  <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="metric-card">
+                      <p class="metric-label">Milhas geradas no cartão</p>
+                      <p class="metric-value">{{ formatPoints(output().milhasCartao) }}</p>
+                    </div>
+                    <div class="metric-card">
+                      <p class="metric-label">Valor das milhas do cartão</p>
+                      <p class="metric-value">{{ formatCurrency(output().valorMilhasCartao) }}</p>
+                    </div>
+                  </div>
+                </section>
+              }
+
+            }
+          </div>
+
+          <!-- Navigation footer -->
+          <div zCardFooter class="justify-between border-t border-border/60 pt-4">
+            <button
+              type="button"
+              zButton
+              variant="outline"
+              class="gap-1.5 rounded-xl"
+              [disabled]="activeStep() === 0"
+              (click)="goToAdjacentStep(-1)"
+            >
+              <ng-icon name="lucideChevronLeft" size="15" />
+              Anterior
+            </button>
+
+            <button
+              type="button"
+              zButton
+              variant="default"
+              class="gap-1.5 rounded-xl"
+              [disabled]="activeStep() === steps.length - 1"
+              (click)="goToAdjacentStep(1)"
+            >
+              Próximo
+              <ng-icon name="lucideChevronRight" size="15" />
+            </button>
+          </div>
+        </div>
+
+        <!-- History card (collapsible) -->
+        <div zCard>
+          <div zCardHeader class="cursor-pointer select-none" (click)="toggleHistory()">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <h2 zCardTitle>Histórico de simulações</h2>
+                <p zCardDescription>
+                  Rascunho salvo automaticamente. Cenários nomeados aparecem nesta lista.
+                </p>
+              </div>
+              <div class="flex shrink-0 items-center gap-2 pt-0.5">
+                @if (savedSimulations().length > 0) {
+                  <span zBadge variant="secondary">{{ savedSimulations().length }}</span>
+                }
+                <ng-icon
+                  name="lucideChevronDown"
+                  size="18"
+                  class="text-muted-foreground transition-transform duration-200"
+                  [class.rotate-180]="historyOpen()"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="collapsible-grid" [class.open]="historyOpen()">
+            <div class="overflow-hidden">
+              <div zCardContent class="space-y-4 pt-0">
+                <label class="space-y-1.5">
+                  <span class="text-sm font-medium text-foreground">Nome do cenário</span>
+                  <input
+                    zInput
+                    placeholder="Ex: Livelo 10x + Latam 80%"
+                    formControlName="scenarioName"
+                  />
+                </label>
+
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <button
+                    type="button"
+                    zButton
+                    variant="accent"
+                    class="rounded-xl"
+                    [disabled]="!canSaveScenario()"
+                    (click)="saveCurrentScenario()"
+                  >
+                    Salvar cenário
+                  </button>
+
+                  @if (saveFeedback()) {
+                    <p class="text-sm text-muted-foreground">{{ saveFeedback() }}</p>
+                  }
+                </div>
+
+                <div zSeparator></div>
+
+                @if (savedSimulations().length === 0) {
+                  <p class="rounded-xl bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+                    Nenhum cenário salvo ainda.
+                  </p>
+                } @else {
+                  <div class="space-y-2.5">
+                    @for (simulation of savedSimulations(); track trackScenario($index, simulation)) {
+                      <article class="rounded-xl border border-border bg-background/60 p-4">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div class="min-w-0 space-y-0.5">
+                            <h3 class="truncate font-medium text-foreground">{{ simulation.name }}</h3>
+                            <p class="text-xs text-muted-foreground">{{ formatDate(simulation.savedAt) }}</p>
+                            <p class="text-xs text-muted-foreground">
+                              Desconto:
+                              <span class="font-medium text-foreground">{{ formatPercent(simulation.discountRate) }}</span>
+                            </p>
+                          </div>
+
+                          <div class="flex shrink-0 gap-2">
+                            <button
+                              type="button"
+                              zButton
+                              variant="outline"
+                              class="rounded-xl"
+                              (click)="loadScenario(simulation)"
+                            >
+                              Carregar
+                            </button>
+                            <button
+                              type="button"
+                              zButton
+                              variant="ghost"
+                              class="rounded-xl text-destructive hover:text-destructive"
+                              (click)="deleteScenario(simulation.id)"
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sidebar: Consolidated results -->
+      <aside class="hidden xl:block">
+        <div class="sticky top-24">
+          <div zCard class="overflow-hidden">
+            <div zCardHeader>
+              <div class="flex items-center gap-2">
+                <span zBadge variant="secondary">Resultado</span>
+              </div>
+              <h2 zCardTitle>Consolidado</h2>
+              <p zCardDescription>
+                Atualiza em tempo real conforme você navega.
+              </p>
+            </div>
+
+            <div zCardContent class="space-y-4">
+              <div class="space-y-2.5">
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-sm text-muted-foreground">Valor do produto</span>
+                  <strong class="text-right text-sm text-foreground">
+                    {{ formatCurrency(parsedInput().valorCompra) }}
+                  </strong>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <span class="text-sm text-muted-foreground">Total de milhas vendidas</span>
+                  <strong class="text-right text-sm text-foreground">
+                    {{ formatCurrency(output().vendaMilhasTotal) }}
+                  </strong>
+                </div>
+              </div>
+
+              <div zSeparator></div>
+
+              <label class="space-y-1.5">
+                <span class="text-sm font-medium text-foreground">Seguro proteção de preço (R$)</span>
+                <input
+                  zInput
+                  type="text"
+                  inputmode="decimal"
+                  placeholder="0,00"
+                  formControlName="seguroProtecaoPreco"
+                  currencyMask
+                  [invalid]="isInvalidCurrencyNonNegative(formValue().seguroProtecaoPreco)"
+                />
+              </label>
+            </div>
+
+            <!-- Final value block -->
+            <div class="mx-4 mb-4 rounded-xl bg-secondary p-5">
+              <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Valor final do pedido</p>
+              <p class="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+                {{ formatCurrency(output().valorFinalPedido) }}
+              </p>
+              <div class="mt-4 flex items-center justify-between gap-3">
+                <span class="text-sm text-muted-foreground">Desconto real</span>
+                <span zBadge variant="success" class="text-sm font-semibold">
+                  {{ formatPercent(output().descontoReal) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Mobile sticky bar -->
+    <div class="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-background/95 px-4 py-3 backdrop-blur-xl xl:hidden">
+      <div class="mx-auto flex max-w-7xl items-center justify-between gap-4">
+        <div class="min-w-0">
+          <p class="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">Resultado</p>
+          <p class="truncate text-sm font-semibold text-foreground">
+            {{ formatCurrency(quickSummary().valorFinalPedido) }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          zButton
+          variant="accent"
+          class="shrink-0 gap-1.5 rounded-xl"
+          (click)="openDrawer()"
+        >
+          {{ formatPercent(quickSummary().descontoReal) }}
+          <ng-icon name="lucideArrowUpRight" size="14" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile drawer -->
+    <z-drawer
+      [open]="drawerOpen()"
+      title="Resultado consolidado"
+      description="Mesmo painel do desktop, otimizado para telas pequenas."
+      (close)="closeDrawer()"
+    >
+      <div class="space-y-4 pb-10">
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-sm text-muted-foreground">Valor do produto</span>
+            <strong class="text-right text-sm text-foreground">
+              {{ formatCurrency(parsedInput().valorCompra) }}
+            </strong>
+          </div>
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-sm text-muted-foreground">Total de milhas vendidas</span>
+            <strong class="text-right text-sm text-foreground">
+              {{ formatCurrency(output().vendaMilhasTotal) }}
+            </strong>
+          </div>
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-sm text-muted-foreground">Seguro proteção de preço</span>
+            <strong class="text-right text-sm text-foreground">
+              {{ formatCurrency(parsedInput().seguroProtecaoPreco ?? 0) }}
+            </strong>
+          </div>
+        </div>
+
+        <div zSeparator></div>
+
+        <div class="rounded-xl bg-secondary p-5">
+          <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Valor final do pedido</p>
+          <p class="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+            {{ formatCurrency(output().valorFinalPedido) }}
+          </p>
+          <div class="mt-4 flex items-center justify-between gap-4">
+            <span class="text-sm text-muted-foreground">Desconto real</span>
+            <span zBadge variant="success" class="text-sm font-semibold">
+              {{ formatPercent(output().descontoReal) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </z-drawer>
+  </form>
+</section>

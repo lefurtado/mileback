@@ -1,0 +1,109 @@
+<div class="min-h-dvh bg-[radial-gradient(circle_at_top,color-mix(in_oklab,var(--color-primary)_10%,transparent),transparent_30%),linear-gradient(180deg,color-mix(in_oklab,var(--color-background)_96%,white_4%),var(--color-background))]">
+  <header class="sticky top-0 z-40 border-b border-border/60 bg-background/90 backdrop-blur-xl">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+      <div class="flex min-w-0 items-center gap-5">
+        <a
+          routerLink="/super-cashback"
+          class="shrink-0"
+          (click)="handlePrimaryNav($event, '/super-cashback')"
+        >
+          <span class="text-lg font-semibold tracking-tight text-foreground">Mileback</span>
+          <p class="hidden text-xs text-muted-foreground sm:block">Cashback e milhas</p>
+        </a>
+
+        <nav
+          class="hidden items-center gap-1 rounded-full border border-border/70 bg-card/70 p-1 md:flex"
+          aria-label="Calculadoras"
+        >
+          @for (item of navItems; track item.path) {
+            @if (item.disabled) {
+              <button
+                type="button"
+                zButton
+                variant="ghost"
+                class="relative cursor-not-allowed rounded-full px-4 text-sm opacity-45"
+                disabled
+                title="Em breve"
+              >
+                {{ item.label }}
+                <span zBadge variant="outline" class="ml-1.5 text-[10px]">Em breve</span>
+              </button>
+            } @else {
+              <a
+                zButton
+                variant="ghost"
+                class="rounded-full px-4 text-sm transition-colors"
+                [routerLink]="item.path"
+                routerLinkActive
+                #activeLink="routerLinkActive"
+                [class.bg-secondary]="activeLink.isActive"
+                [class.text-foreground]="activeLink.isActive"
+                [class.font-medium]="activeLink.isActive"
+                [routerLinkActiveOptions]="{ exact: true }"
+                [attr.aria-current]="activeLink.isActive ? 'page' : null"
+                (click)="handlePrimaryNav($event, item.path)"
+              >
+                {{ item.label }}
+              </a>
+            }
+          }
+        </nav>
+      </div>
+
+      <button
+        type="button"
+        zButton
+        variant="outline"
+        class="shrink-0 rounded-full"
+        (click)="toggleTheme()"
+        [attr.aria-pressed]="isDarkMode()"
+        [attr.aria-label]="isDarkMode() ? 'Alternar para modo claro' : 'Alternar para modo escuro'"
+      >
+        <ng-icon [name]="isDarkMode() ? 'lucideSun' : 'lucideMoon'" size="16" />
+        <span class="hidden sm:inline">{{ isDarkMode() ? 'Modo claro' : 'Modo escuro' }}</span>
+      </button>
+    </div>
+
+    <div class="relative md:hidden">
+      <nav
+        class="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-4 pb-3 sm:px-6"
+        aria-label="Calculadoras mobile"
+      >
+        @for (item of navItems; track item.path) {
+          @if (item.disabled) {
+            <button
+              type="button"
+              zButton
+              variant="ghost"
+              class="shrink-0 cursor-not-allowed rounded-full text-sm opacity-45"
+              disabled
+              title="Em breve"
+            >
+              {{ item.label }}
+            </button>
+          } @else {
+            <a
+              zButton
+              variant="ghost"
+              class="shrink-0 rounded-full text-sm"
+              [routerLink]="item.path"
+              routerLinkActive
+              #mobileActiveLink="routerLinkActive"
+              [class.bg-secondary]="mobileActiveLink.isActive"
+              [class.font-medium]="mobileActiveLink.isActive"
+              [routerLinkActiveOptions]="{ exact: true }"
+              (click)="handlePrimaryNav($event, item.path)"
+            >
+              {{ item.label }}
+            </a>
+          }
+        }
+      </nav>
+      <div class="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-background to-transparent"></div>
+    </div>
+  </header>
+
+  <main>
+    <router-outlet />
+  </main>
+</div>
