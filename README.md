@@ -1,59 +1,60 @@
 # Mileback
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.7.
+Aplicação web para **comparar e simular cenários de cashback e milhas**, com foco em quem compra em parceiros, acumula pontos no cartão e transfere milhas com bônus e custo de milheiro.
 
-## Development server
+O objetivo é deixar explícito **quanto vale, em dinheiro, cada caminho** (parceiro × cartão × cotação do dólar × bônus de transferência × custo do milheiro), para apoiar decisões de compra e acúmulo.
 
-To start a local development server, run:
+## O que o projeto faz hoje
 
-```bash
-ng serve
-```
+- **Super Cashback** (`/super-cashback`): fluxo em etapas que reúne cotação do dólar, valor da compra no parceiro, pontos por real no site, pontos por dólar no cartão, bônus e custo de milheiro (parceiro e cartão), seguro de proteção de preço e opção de somar pontos do cartão na análise final. O resultado consolida a simulação para o cenário informado.
+- **Rascunho** do assistente e **cenários salvos** ficam no `localStorage` do navegador; a cotação USD/BRL pode ser obtida via API pública (AwesomeAPI) conforme o fluxo da tela.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Em breve
 
-## Code scaffolding
+No menu aparecem entradas reservadas para outras calculadoras (por exemplo taxas de cartão e plano clube), ainda **desabilitadas** até serem implementadas.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Stack
 
-```bash
-ng generate component component-name
-```
+- [Angular](https://angular.dev/) 21 (standalone, rotas com lazy loading)
+- [Tailwind CSS](https://tailwindcss.com/) 4
+- [ng-icons](https://www.ng-icons.com/) (Lucide)
+- [ngx-currency](https://www.npmjs.com/package/ngx-currency) para campos monetários
+- Testes unitários com [Vitest](https://vitest.dev/) via `@angular/build`
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Pré-requisitos
 
-```bash
-ng generate --help
-```
+- [Node.js](https://nodejs.org/) (versão compatível com o Angular 21 do projeto)
+- npm (o repositório fixa `packageManager` em `package.json`)
 
-## Building
-
-To build the project run:
+## Como rodar em desenvolvimento
 
 ```bash
-ng build
+npm install
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Abra `http://localhost:4200/`. A rota raiz redireciona para **Super Cashback**.
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Build de produção
 
 ```bash
-ng test
+npm run build
 ```
 
-## Running end-to-end tests
+Artefatos em `dist/`.
 
-For end-to-end (e2e) testing, run:
+## Testes
 
 ```bash
-ng e2e
+npm test
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Estrutura (visão geral)
 
-## Additional Resources
+- `src/app/features/super-cashback/` — calculadora Super Cashback (componente, rotas, serviço, utilitários e tipos)
+- `src/app/features/coming-soon/` — rotas placeholder para funcionalidades futuras
+- `src/app/shared/` — componentes e diretivas de UI reutilizáveis
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+---
+
+Projeto gerado com [Angular CLI](https://github.com/angular/angular-cli); documentação adicional da ferramenta em [Angular CLI](https://angular.dev/tools/cli).
