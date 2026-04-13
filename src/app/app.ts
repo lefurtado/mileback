@@ -3,10 +3,11 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideSun, lucideMoon } from '@ng-icons/lucide';
+import { lucideSun, lucideMoon, lucideTrash2 } from '@ng-icons/lucide';
 
 import { BadgeDirective } from '@/shared/components/ui/badge.directive';
 import { ButtonDirective } from '@/shared/components/ui/button.directive';
+import { SuperCashbackService } from '@/features/super-cashback/super-cashback.service';
 
 interface NavItem {
   label: string;
@@ -19,13 +20,14 @@ const THEME_STORAGE_KEY = 'mileback.theme';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, NgIcon, ButtonDirective, BadgeDirective],
-  providers: [provideIcons({ lucideSun, lucideMoon })],
+  providers: [provideIcons({ lucideSun, lucideMoon, lucideTrash2 })],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
   private readonly router = inject(Router);
+  private readonly superCashbackService = inject(SuperCashbackService);
 
   protected readonly navItems: NavItem[] = [
     { label: 'Super Cashback', path: '/super-cashback' },
@@ -66,6 +68,16 @@ export class App {
       event.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
+
+  protected clearSuperCashbackWizard(): void {
+    const ok = window.confirm(
+      'Limpar todos os campos de todas as etapas do Super Cashback? O rascunho salvo neste aparelho também será apagado.',
+    );
+    if (!ok) {
+      return;
+    }
+    this.superCashbackService.requestWizardClear();
   }
 
   private getInitialTheme(): boolean {

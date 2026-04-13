@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { map, Observable, Subject } from 'rxjs';
 
 import { DollarQuoteSnapshot, SavedSimulation, SuperCashbackDraft } from './super-cashback.types';
 
@@ -18,6 +18,10 @@ const HISTORY_LIMIT = 10;
 @Injectable({ providedIn: 'root' })
 export class SuperCashbackService {
   private readonly http = inject(HttpClient);
+  private readonly wizardClearSubject = new Subject<void>();
+
+  /** Emite quando a aplicação pede limpeza total do wizard (formulário + rascunho). */
+  readonly wizardClear$ = this.wizardClearSubject.asObservable();
 
   fetchDollarQuote(): Observable<DollarQuoteSnapshot> {
     return this.http
@@ -37,6 +41,23 @@ export class SuperCashbackService {
 
   saveDraft(draft: SuperCashbackDraft): void {
     this.writeStorage(DRAFT_KEY, draft);
+  }
+
+  /** Remove o rascunho persistido (ex.: após limpar todos os campos). */
+  clearDraft(): void {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    localStorage.removeItem(DRAFT_KEY);
+  }
+
+  /**
+   * Limpa o rascunho salvo e notifica o componente do Super Cashback, se estiver carregado,
+   * para resetar formulário, passo ativo e estado da cotação na memória.
+   */
+  requestWizardClear(): void {
+    this.clearDraft();
+    this.wizardClearSubject.next();
   }
 
   getSavedSimulations(): SavedSimulation[] {

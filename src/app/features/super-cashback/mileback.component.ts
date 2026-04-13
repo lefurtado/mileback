@@ -220,6 +220,12 @@ export class MilebackComponent {
   constructor() {
     this.restoreDraft();
 
+    this.service.wizardClear$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.applyWizardClear();
+      });
+
     this.form.valueChanges
       .pipe(
         debounceTime(180),
@@ -425,6 +431,17 @@ export class MilebackComponent {
     }
 
     this.refreshQuote(!quoteFieldHasValue);
+  }
+
+  private applyWizardClear(): void {
+    this.form.reset({ ...DEFAULT_FORM_VALUE });
+    this.activeStep.set(0);
+    this.quoteUpdatedAt.set(null);
+    this.quoteSource.set(null);
+    this.quoteError.set(null);
+    this.quoteLoading.set(false);
+    this.saveFeedback.set(null);
+    this.loadQuoteIfNeeded();
   }
 
 }

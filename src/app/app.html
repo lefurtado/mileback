@@ -50,18 +50,33 @@
         </nav>
       </div>
 
-      <button
-        type="button"
-        zButton
-        variant="outline"
-        class="shrink-0 rounded-full"
-        (click)="toggleTheme()"
-        [attr.aria-pressed]="isDarkMode()"
-        [attr.aria-label]="isDarkMode() ? 'Alternar para modo claro' : 'Alternar para modo escuro'"
-      >
-        <ng-icon [name]="isDarkMode() ? 'lucideSun' : 'lucideMoon'" size="16" />
-        <span class="hidden sm:inline">{{ isDarkMode() ? 'Modo claro' : 'Modo escuro' }}</span>
-      </button>
+      <div class="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          zButton
+          variant="ghost"
+          class="rounded-full gap-1.5 text-muted-foreground hover:text-foreground"
+          (click)="clearSuperCashbackWizard()"
+          title="Zera todos os campos de todas as etapas do Super Cashback e remove o rascunho salvo"
+          aria-label="Limpar todos os dados do Super Cashback"
+        >
+          <ng-icon name="lucideTrash2" size="16" />
+          <span class="hidden sm:inline">Limpar tudo</span>
+        </button>
+
+        <button
+          type="button"
+          zButton
+          variant="outline"
+          class="rounded-full"
+          (click)="toggleTheme()"
+          [attr.aria-pressed]="isDarkMode()"
+          [attr.aria-label]="isDarkMode() ? 'Alternar para modo claro' : 'Alternar para modo escuro'"
+        >
+          <ng-icon [name]="isDarkMode() ? 'lucideSun' : 'lucideMoon'" size="16" />
+          <span class="hidden sm:inline">{{ isDarkMode() ? 'Modo claro' : 'Modo escuro' }}</span>
+        </button>
+      </div>
     </div>
 
     <div class="relative md:hidden">
