@@ -320,17 +320,18 @@
               Anterior
             </button>
 
-            <button
-              type="button"
-              zButton
-              variant="default"
-              class="gap-1.5 rounded-xl"
-              [disabled]="activeStep() === steps.length - 1"
-              (click)="goToAdjacentStep(1)"
-            >
-              Próximo
-              <ng-icon name="lucideChevronRight" size="15" />
-            </button>
+            @if (activeStep() < steps.length - 1) {
+              <button
+                type="button"
+                zButton
+                variant="default"
+                class="gap-1.5 rounded-xl"
+                (click)="goToAdjacentStep(1)"
+              >
+                Próximo
+                <ng-icon name="lucideChevronRight" size="15" />
+              </button>
+            }
           </div>
         </div>
 
